@@ -20,15 +20,17 @@ public class Julius {
         System.out.println(divider);
 
         Scanner in = new Scanner(System.in);
-        String line;
 
         while (true) {
-            line = in.nextLine();
-            if (line.equals("bye")) {
-                break;
+            String input = in.nextLine().trim();
+            String processedInput = input.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
+
+            if (processedInput.contains("bye")) {
+                break; // Exit the loop if the user types "bye"
             }
+
             System.out.println(divider);
-            System.out.println("    " + line); // Echo the input
+            System.out.println("    " + input); // Echo the input
             System.out.println(divider);
         }
 
