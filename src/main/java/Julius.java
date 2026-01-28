@@ -2,6 +2,7 @@ import java.util.Scanner;
 
 public class Julius {
     public static void main(String[] args) {
+        String divider = "____________________________________________________________";
         String logo = "      _ _    _ _      _____ _    _  _____\n"
                 + "     | | |  | | |    |_   _| |  | |/ ____|\n"
                 + "     | | |  | | |      | | | |  | | (___  \n"
@@ -13,10 +14,10 @@ public class Julius {
         String name = "Julius";
 
         // Greet the user
-        System.out.println("____________________________________________________________");
+        System.out.println(divider);
         System.out.println(" Hello! I'm " + name);
         System.out.println(" What can I do for you?");
-        System.out.println("____________________________________________________________");
+        System.out.println(divider);
 
         Scanner in = new Scanner(System.in);
         String line;
@@ -26,11 +27,14 @@ public class Julius {
             if (line.equals("bye")) {
                 break;
             }
-            System.out.println(line); // Echo the input
+            System.out.println(divider);
+            System.out.println("    " + line); // Echo the input
+            System.out.println(divider);
         }
 
         // Exit message
+        System.out.println(divider);
         System.out.println(" Bye. Hope to see you again soon!");
-        System.out.println("____________________________________________________________");
+        System.out.println(divider);
     }
 }
