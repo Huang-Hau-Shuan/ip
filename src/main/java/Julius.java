@@ -1,3 +1,4 @@
+// java
 import java.util.Scanner;
 
 public class Julius {
@@ -41,26 +42,53 @@ public class Julius {
                 if (taskCount == 0) {
                     System.out.println("    No tasks in your list.");
                 } else {
-                    // System.out.println("    Here are the tasks in your list:");
                     for (int i = 0; i < taskCount; i++) {
                         System.out.println("    " + (i + 1) + ". " + tasks[i]);
                     }
                 }
             } else if (processedInput.startsWith("add ")) {
-                // Level-2: Add a new task
+                // Level-2: Add a new task (normalize to start with "[ ] ")
                 String task = input.substring(4).trim();
                 if (!task.isEmpty()) {
-                    tasks[taskCount] = task;
+                    // Remove any existing leading "[ ]" or "[X]" (case-insensitive) and leading spaces
+                    String cleaned = task.replaceFirst("^\\s*\\[[ xX]\\]\\s*", "");
+                    tasks[taskCount] = "[ ] " + cleaned;
                     taskCount++;
-                    System.out.println("    Added task: " + task);
+                    System.out.println("    Added task: " + cleaned);
                 } else {
                     System.out.println("    Please provide a task to add.");
                 }
+            } else if (processedInput.startsWith("mark ")) {
+                // Level-3: Mark as done by mark [index] command of the list
+                try {
+                    int index = Integer.parseInt(processedInput.substring(5).trim()) - 1;
+                    if (index >= 0 && index < taskCount) {
+                        // Normalize existing prefix then add "[X] "
+                        tasks[index] = "[X] " + tasks[index].replaceFirst("^\\s*\\[[ xX]\\]\\s*", "");
+                        System.out.println("    Marked task " + (index + 1) + " as done.");
+                    } else {
+                        System.out.println("    Invalid task index.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("    Please provide a valid task index to mark.");
+                }
+            } else if (processedInput.startsWith("unmark ")) {
+                // Level-3: Unmark as not done by unmark [index] command
+                try {
+                    int index = Integer.parseInt(processedInput.substring(7).trim()) - 1;
+                    if (index >= 0 && index < taskCount) {
+                        // Normalize existing prefix then add "[ ] "
+                        tasks[index] = "[ ] " + tasks[index].replaceFirst("^\\s*\\[[ xX]\\]\\s*", "");
+                        System.out.println("    Unmarked task " + (index + 1) + " as not done.");
+                    } else {
+                        System.out.println("    Invalid task index.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("    Please provide a valid task index to unmark.");
+                }
             } else {
-                // System.out.println("    I'm sorry, I don't understand that command:");
                 System.out.println("    " + input); // Echo the input
             }
-
 
             System.out.println(divider);
         }
