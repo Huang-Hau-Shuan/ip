@@ -1,11 +1,13 @@
 import java.util.Scanner;
 
 public class Julius {
+    private static final String DIVIDER = "____________________________________________________________";
+    private static final int MAX_TASKS = 100;
+    private static final String BOT_NAME = "Julius";
     public static void main(String[] args) {
-        String divider = "____________________________________________________________";
 
         // Level-2: Initialise storage array and a counter
-        Task[] tasks = new Task[100];
+        Task[] tasks = new Task[MAX_TASKS];
         int taskCount = 0;
 
         String logo = "      _ _    _ _      _____ _    _  _____\n"
@@ -16,27 +18,26 @@ public class Julius {
                 + " \\____/ \\____/|______|_____|\\____/|_____/\n";
 
         System.out.println("Hello from\n" + logo);
-        String name = "Julius";
 
         // Greet the user
-        System.out.println(divider);
-        System.out.println(" Hello! I'm " + name);
+        System.out.println(DIVIDER);
+        System.out.println(" Hello! I'm " + BOT_NAME);
         System.out.println(" What can I do for you?");
-        System.out.println(divider);
+        System.out.println(DIVIDER);
 
         Scanner in = new Scanner(System.in);
 
         while (true) {
-            String input = in.nextLine().trim();
-            String processedInput = input.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
+            String userInput = in.nextLine().trim();
+            String processedInput = userInput.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
 
             if (processedInput.contains("bye")) {
                 break; // Exit the loop if the user types "bye"
             }
 
-            System.out.println(divider);
+            System.out.println(DIVIDER);
 
-            if (input.equalsIgnoreCase("list")) {
+            if (userInput.equalsIgnoreCase("list")) {
                 // List all tasks
                 if (taskCount == 0) {
                     System.out.println("    No tasks in your list.");
@@ -46,9 +47,9 @@ public class Julius {
                         System.out.println(" " + (i + 1) + "." + tasks[i].toString());
                     }
                 }
-            } else if (input.startsWith("todo ")) {
+            } else if (userInput.startsWith("todo ")) {
                 // Changed to Level 4: Add a Todo task
-                String description = input.substring(5).trim();
+                String description = userInput.substring(5).trim();
                 if (!description.isEmpty()) {
                     tasks[taskCount] = new Todo(description);
                     taskCount++;
@@ -58,9 +59,9 @@ public class Julius {
                 } else {
                     System.out.println("    Please provide a task description.");
                 }
-            } else if (input.startsWith("deadline ")) {
+            } else if (userInput.startsWith("deadline ")) {
                 // Level 4: Add a Deadline task
-                String remainder = input.substring(9).trim();
+                String remainder = userInput.substring(9).trim();
                 int byIndex = remainder.indexOf("/by ");
 
                 if (byIndex != -1) {
@@ -79,9 +80,9 @@ public class Julius {
                 } else {
                     System.out.println("    Please use format: deadline <description> /by <date>");
                 }
-            } else if (input.startsWith("event ")) {
+            } else if (userInput.startsWith("event ")) {
                 // Add an Event task
-                String remainder = input.substring(6).trim();
+                String remainder = userInput.substring(6).trim();
                 int fromIndex = remainder.indexOf("/from ");
                 int toIndex = remainder.indexOf("/to ");
 
@@ -102,10 +103,10 @@ public class Julius {
                 } else {
                     System.out.println("    Please use format: event <description> /from <start> /to <end>");
                 }
-            } else if (input.startsWith("mark ")) {
+            } else if (userInput.startsWith("mark ")) {
                 // Mark as done by mark [index] command of the list
                 try {
-                    int index = Integer.parseInt(input.substring(5).trim()) - 1;
+                    int index = Integer.parseInt(userInput.substring(5).trim()) - 1;
                     if (index >= 0 && index < taskCount) {
                         tasks[index].markAsDone();
                         System.out.println(" Nice! I've marked this task as done:");
@@ -116,10 +117,10 @@ public class Julius {
                 } catch (NumberFormatException e) {
                     System.out.println("    Please provide a valid task index to mark.");
                 }
-            } else if (input.startsWith("unmark ")) {
+            } else if (userInput.startsWith("unmark ")) {
                 // Level 3: Unmark as not done by unmark [index] command
                 try {
-                    int index = Integer.parseInt(input.substring(7).trim()) - 1;
+                    int index = Integer.parseInt(userInput.substring(7).trim()) - 1;
                     if (index >= 0 && index < taskCount) {
                         tasks[index].markAsNotDone();
                         System.out.println(" OK, I've marked this task as not done yet:");
@@ -131,15 +132,15 @@ public class Julius {
                     System.out.println("    Please provide a valid task index to unmark.");
                 }
             } else {
-                System.out.println("    " + input); // Echo the input
+                System.out.println("    " + userInput); // Echo the input
             }
 
-            System.out.println(divider);
+            System.out.println(DIVIDER);
         }
 
         // Exit message
-        System.out.println(divider);
+        System.out.println(DIVIDER);
         System.out.println(" Bye. Hope to see you again soon!");
-        System.out.println(divider);
+        System.out.println(DIVIDER);
     }
 }
