@@ -4,12 +4,23 @@ public class Julius {
     private static final String DIVIDER = "____________________________________________________________";
     private static final int MAX_TASKS = 100;
     private static final String BOT_NAME = "Julius";
+    private static final int TODO_PREFIX_LENGTH = 5;
+    private static final int DEADLINE_PREFIX_LENGTH = 9;
+    private static final int EVENT_PREFIX_LENGTH = 6;
+    private static final int MARK_PREFIX_LENGTH = 5;
+    private static final int UNMARK_PREFIX_LENGTH = 7;
+
+    private static Task[] tasks = new Task[MAX_TASKS];
+    private static int taskCount = 0;
+
     public static void main(String[] args) {
+        showWelcomeMessage();
+        Scanner scanner = new Scanner(System.in);
+        runCommandLoop(scanner);
+        showGoodbyeMessage();
+    }
 
-        // Level-2: Initialise storage array and a counter
-        Task[] tasks = new Task[MAX_TASKS];
-        int taskCount = 0;
-
+    private static void showWelcomeMessage() {
         String logo = "      _ _    _ _      _____ _    _  _____\n"
                 + "     | | |  | | |    |_   _| |  | |/ ____|\n"
                 + "     | | |  | | |      | | | |  | | (___\n"
@@ -18,129 +29,166 @@ public class Julius {
                 + " \\____/ \\____/|______|_____|\\____/|_____/\n";
 
         System.out.println("Hello from\n" + logo);
-
-        // Greet the user
-        System.out.println(DIVIDER);
+        printDivider();
         System.out.println(" Hello! I'm " + BOT_NAME);
         System.out.println(" What can I do for you?");
-        System.out.println(DIVIDER);
+        printDivider();
+    }
 
-        Scanner in = new Scanner(System.in);
-
+    private static void runCommandLoop(Scanner scanner) {
         while (true) {
-            String userInput = in.nextLine().trim();
-            String processedInput = userInput.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
+            String userInput = scanner.nextLine().trim();
 
-            if (processedInput.contains("bye")) {
-                break; // Exit the loop if the user types "bye"
+            if (isExitCommand(userInput)) {
+                break;
             }
 
-            System.out.println(DIVIDER);
+            printDivider();
+            executeCommand(userInput);
+            printDivider();
+        }
+    }
 
+    private static boolean isExitCommand(String input) {
+        String processedInput = input.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
+        return processedInput.contains("bye");
+    }
+
+    private static void executeCommand(String userInput) {
+        try {
             if (userInput.equalsIgnoreCase("list")) {
-                // List all tasks
-                if (taskCount == 0) {
-                    System.out.println("    No tasks in your list.");
-                } else {
-                    System.out.println(" Here are the tasks in your list:");
-                    for (int i = 0; i < taskCount; i++) {
-                        System.out.println(" " + (i + 1) + "." + tasks[i].toString());
-                    }
-                }
+                listTasks();
             } else if (userInput.startsWith("todo ")) {
-                // Changed to Level 4: Add a Todo task
-                String description = userInput.substring(5).trim();
-                if (!description.isEmpty()) {
-                    tasks[taskCount] = new Todo(description);
-                    taskCount++;
-                    System.out.println(" Got it. I've added this task:");
-                    System.out.println("   " + tasks[taskCount - 1].toString());
-                    System.out.println(" Now you have " + taskCount + " tasks in the list.");
-                } else {
-                    System.out.println("    Please provide a task description.");
-                }
+                addTodoTask(userInput);
             } else if (userInput.startsWith("deadline ")) {
-                // Level 4: Add a Deadline task
-                String remainder = userInput.substring(9).trim();
-                int byIndex = remainder.indexOf("/by ");
-
-                if (byIndex != -1) {
-                    String description = remainder.substring(0, byIndex).trim();
-                    String by = remainder.substring(byIndex + 4).trim();
-
-                    if (!description.isEmpty() && !by.isEmpty()) {
-                        tasks[taskCount] = new Deadline(description, by);
-                        taskCount++;
-                        System.out.println(" Got it. I've added this task:");
-                        System.out.println("   " + tasks[taskCount - 1].toString());
-                        System.out.println(" Now you have " + taskCount + " tasks in the list.");
-                    } else {
-                        System.out.println("    Please provide both description and deadline.");
-                    }
-                } else {
-                    System.out.println("    Please use format: deadline <description> /by <date>");
-                }
+                addDeadlineTask(userInput);
             } else if (userInput.startsWith("event ")) {
-                // Add an Event task
-                String remainder = userInput.substring(6).trim();
-                int fromIndex = remainder.indexOf("/from ");
-                int toIndex = remainder.indexOf("/to ");
-
-                if (fromIndex != -1 && toIndex != -1 && toIndex > fromIndex) {
-                    String description = remainder.substring(0, fromIndex).trim();
-                    String from = remainder.substring(fromIndex + 6, toIndex).trim();
-                    String to = remainder.substring(toIndex + 4).trim();
-
-                    if (!description.isEmpty() && !from.isEmpty() && !to.isEmpty()) {
-                        tasks[taskCount] = new Event(description, from, to);
-                        taskCount++;
-                        System.out.println(" Got it. I've added this task:");
-                        System.out.println("   " + tasks[taskCount - 1].toString());
-                        System.out.println(" Now you have " + taskCount + " tasks in the list.");
-                    } else {
-                        System.out.println("    Please provide description, from and to times.");
-                    }
-                } else {
-                    System.out.println("    Please use format: event <description> /from <start> /to <end>");
-                }
+                addEventTask(userInput);
             } else if (userInput.startsWith("mark ")) {
-                // Mark as done by mark [index] command of the list
-                try {
-                    int index = Integer.parseInt(userInput.substring(5).trim()) - 1;
-                    if (index >= 0 && index < taskCount) {
-                        tasks[index].markAsDone();
-                        System.out.println(" Nice! I've marked this task as done:");
-                        System.out.println("   " + tasks[index].toString());
-                    } else {
-                        System.out.println("    Invalid task index.");
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("    Please provide a valid task index to mark.");
-                }
+                markTaskAsDone(userInput);
             } else if (userInput.startsWith("unmark ")) {
-                // Level 3: Unmark as not done by unmark [index] command
-                try {
-                    int index = Integer.parseInt(userInput.substring(7).trim()) - 1;
-                    if (index >= 0 && index < taskCount) {
-                        tasks[index].markAsNotDone();
-                        System.out.println(" OK, I've marked this task as not done yet:");
-                        System.out.println("   " + tasks[index].toString());
-                    } else {
-                        System.out.println("    Invalid task index.");
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("    Please provide a valid task index to unmark.");
-                }
+                markTaskAsNotDone(userInput);
             } else {
-                System.out.println("    " + userInput); // Echo the input
+                echoInput(userInput);
             }
+        } catch (IllegalArgumentException e) {
+            System.out.println("    " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("    An error occurred: " + e.getMessage());
+        }
+    }
 
-            System.out.println(DIVIDER);
+    private static void listTasks() {
+        if (taskCount == 0) {
+            System.out.println("    No tasks in your list.");
+            return;
         }
 
-        // Exit message
+        System.out.println(" Here are the tasks in your list:");
+        for (int i = 0; i < taskCount; i++) {
+            System.out.println(" " + (i + 1) + "." + tasks[i].toString());
+        }
+    }
+
+    private static void addTodoTask(String userInput) {
+        String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
+
+        if (description.isEmpty()) {
+            throw new IllegalArgumentException("Please provide a task description.");
+        }
+
+        tasks[taskCount] = new Todo(description);
+        taskCount++;
+        printTaskAddedMessage();
+    }
+
+    private static void addDeadlineTask(String userInput) {
+        String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
+        int byIndex = remainder.indexOf("/by ");
+
+        if (byIndex == -1) {
+            throw new IllegalArgumentException("Please use format: deadline <description> /by <date>");
+        }
+
+        String description = remainder.substring(0, byIndex).trim();
+        String by = remainder.substring(byIndex + 4).trim();
+
+        if (description.isEmpty() || by.isEmpty()) {
+            throw new IllegalArgumentException("Please provide both description and deadline.");
+        }
+
+        tasks[taskCount] = new Deadline(description, by);
+        taskCount++;
+        printTaskAddedMessage();
+    }
+
+    private static void addEventTask(String userInput) {
+        String remainder = userInput.substring(EVENT_PREFIX_LENGTH).trim();
+        int fromIndex = remainder.indexOf("/from ");
+        int toIndex = remainder.indexOf("/to ");
+
+        if (fromIndex == -1 || toIndex == -1 || toIndex <= fromIndex) {
+            throw new IllegalArgumentException("Please use format: event <description> /from <start> /to <end>");
+        }
+
+        String description = remainder.substring(0, fromIndex).trim();
+        String from = remainder.substring(fromIndex + 6, toIndex).trim();
+        String to = remainder.substring(toIndex + 4).trim();
+
+        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
+            throw new IllegalArgumentException("Please provide description, from and to times.");
+        }
+
+        tasks[taskCount] = new Event(description, from, to);
+        taskCount++;
+        printTaskAddedMessage();
+    }
+
+    private static void markTaskAsDone(String userInput) {
+        int index = parseTaskIndex(userInput, MARK_PREFIX_LENGTH);
+        validateTaskIndex(index);
+
+        tasks[index].markAsDone();
+        System.out.println(" Nice! I've marked this task as done:");
+        System.out.println("   " + tasks[index].toString());
+    }
+
+    private static void markTaskAsNotDone(String userInput) {
+        int index = parseTaskIndex(userInput, UNMARK_PREFIX_LENGTH);
+        validateTaskIndex(index);
+
+        tasks[index].markAsNotDone();
+        System.out.println(" OK, I've marked this task as not done yet:");
+        System.out.println("   " + tasks[index].toString());
+    }
+
+    private static void echoInput(String userInput) {
+        System.out.println("    " + userInput);
+    }
+
+    private static int parseTaskIndex(String input, int prefixLength) {
+        return Integer.parseInt(input.substring(prefixLength).trim()) - 1;
+    }
+
+    private static void validateTaskIndex(int index) {
+        if (index < 0 || index >= taskCount) {
+            throw new IndexOutOfBoundsException("Invalid task index.");
+        }
+    }
+
+    private static void printTaskAddedMessage() {
+        System.out.println(" Got it. I've added this task:");
+        System.out.println("   " + tasks[taskCount - 1].toString());
+        System.out.println(" Now you have " + taskCount + " tasks in the list.");
+    }
+
+    private static void printDivider() {
         System.out.println(DIVIDER);
+    }
+
+    private static void showGoodbyeMessage() {
+        printDivider();
         System.out.println(" Bye. Hope to see you again soon!");
-        System.out.println(DIVIDER);
+        printDivider();
     }
 }
