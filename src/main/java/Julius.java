@@ -69,9 +69,9 @@ public class Julius {
             } else if (userInput.startsWith("unmark ")) {
                 markTaskAsNotDone(userInput);
             } else {
-                echoInput(userInput);
+                throw new JuliusException("Incomplete or Unknown command.");
             }
-        } catch (IllegalArgumentException e) {
+        } catch (JuliusException e) {
             System.out.println("    " + e.getMessage());
         } catch (Exception e) {
             System.out.println("    An error occurred: " + e.getMessage());
@@ -90,11 +90,11 @@ public class Julius {
         }
     }
 
-    private static void addTodoTask(String userInput) {
+    private static void addTodoTask(String userInput) throws JuliusException {
         String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
 
         if (description.isEmpty()) {
-            throw new IllegalArgumentException("Please provide a task description.");
+            throw new JuliusException("Please provide a task description.");
         }
 
         tasks[taskCount] = new Todo(description);
@@ -102,19 +102,19 @@ public class Julius {
         printTaskAddedMessage();
     }
 
-    private static void addDeadlineTask(String userInput) {
+    private static void addDeadlineTask(String userInput) throws JuliusException{
         String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
         int byIndex = remainder.indexOf("/by ");
 
         if (byIndex == -1) {
-            throw new IllegalArgumentException("Please use format: deadline <description> /by <date>");
+            throw new JuliusException("Please use format: deadline <description> /by <date>");
         }
 
         String description = remainder.substring(0, byIndex).trim();
         String by = remainder.substring(byIndex + 4).trim();
 
         if (description.isEmpty() || by.isEmpty()) {
-            throw new IllegalArgumentException("Please provide both description and deadline.");
+            throw new JuliusException("Please provide both description and deadline.");
         }
 
         tasks[taskCount] = new Deadline(description, by);
@@ -122,13 +122,13 @@ public class Julius {
         printTaskAddedMessage();
     }
 
-    private static void addEventTask(String userInput) {
+    private static void addEventTask(String userInput) throws JuliusException {
         String remainder = userInput.substring(EVENT_PREFIX_LENGTH).trim();
         int fromIndex = remainder.indexOf("/from ");
         int toIndex = remainder.indexOf("/to ");
 
         if (fromIndex == -1 || toIndex == -1 || toIndex <= fromIndex) {
-            throw new IllegalArgumentException("Please use format: event <description> /from <start> /to <end>");
+            throw new JuliusException("Please use format: event <description> /from <start> /to <end>");
         }
 
         String description = remainder.substring(0, fromIndex).trim();
@@ -136,7 +136,7 @@ public class Julius {
         String to = remainder.substring(toIndex + 4).trim();
 
         if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            throw new IllegalArgumentException("Please provide description, from and to times.");
+            throw new JuliusException("Please provide description, from and to times.");
         }
 
         tasks[taskCount] = new Event(description, from, to);
@@ -160,10 +160,6 @@ public class Julius {
         tasks[index].markAsNotDone();
         System.out.println(" OK, I've marked this task as not done yet:");
         System.out.println("   " + tasks[index].toString());
-    }
-
-    private static void echoInput(String userInput) {
-        System.out.println("    " + userInput);
     }
 
     private static int parseTaskIndex(String input, int prefixLength) {
