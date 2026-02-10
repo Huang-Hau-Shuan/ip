@@ -1,3 +1,11 @@
+package julius;
+
+import julius.exception.JuliusException;
+import julius.task.Deadline;
+import julius.task.Event;
+import julius.task.Task;
+import julius.task.Todo;
+
 import java.util.Scanner;
 
 public class Julius {
