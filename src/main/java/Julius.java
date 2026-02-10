@@ -58,18 +58,28 @@ public class Julius {
         try {
             if (userInput.equalsIgnoreCase("list")) {
                 listTasks();
+            } else if (userInput.equalsIgnoreCase("todo")) {
+                throw new JuliusException("The description of a todo cannot be empty.");
             } else if (userInput.startsWith("todo ")) {
                 addTodoTask(userInput);
+            } else if (userInput.equalsIgnoreCase("deadline")) {
+                throw new JuliusException("The description of a deadline cannot be empty.");
             } else if (userInput.startsWith("deadline ")) {
                 addDeadlineTask(userInput);
+            } else if (userInput.equalsIgnoreCase("event")) {
+                throw new JuliusException("The description of an event cannot be empty.");
             } else if (userInput.startsWith("event ")) {
                 addEventTask(userInput);
+            } else if (userInput.equalsIgnoreCase("mark")) {
+                throw new JuliusException("Please provide a task number to mark.");
             } else if (userInput.startsWith("mark ")) {
                 markTaskAsDone(userInput);
+            } else if (userInput.equalsIgnoreCase("unmark")) {
+                throw new JuliusException("Please provide a task number to unmark.");
             } else if (userInput.startsWith("unmark ")) {
                 markTaskAsNotDone(userInput);
             } else {
-                throw new JuliusException("Incomplete or Unknown command.");
+                throw new JuliusException("Mea Culpa! I don't know what that means!");
             }
         } catch (JuliusException e) {
             System.out.println("    " + e.getMessage());
@@ -144,22 +154,34 @@ public class Julius {
         printTaskAddedMessage();
     }
 
-    private static void markTaskAsDone(String userInput) {
-        int index = parseTaskIndex(userInput, MARK_PREFIX_LENGTH);
-        validateTaskIndex(index);
+    private static void markTaskAsDone(String userInput) throws JuliusException {
+        try {
+            int index = parseTaskIndex(userInput, MARK_PREFIX_LENGTH);
+            validateTaskIndex(index);
 
-        tasks[index].markAsDone();
-        System.out.println(" Nice! I've marked this task as done:");
-        System.out.println("   " + tasks[index].toString());
+            tasks[index].markAsDone();
+            System.out.println(" Nice! I've marked this task as done:");
+            System.out.println("   " + tasks[index].toString());
+        } catch (NumberFormatException e) {
+            throw new JuliusException("Please provide a valid task number to mark.");
+        } catch (IndexOutOfBoundsException e) {
+            throw new JuliusException("Task number out of range. You ONLY have " + taskCount + " tasks.");
+        }
     }
 
-    private static void markTaskAsNotDone(String userInput) {
-        int index = parseTaskIndex(userInput, UNMARK_PREFIX_LENGTH);
-        validateTaskIndex(index);
+    private static void markTaskAsNotDone(String userInput) throws JuliusException {
+        try {
+            int index = parseTaskIndex(userInput, UNMARK_PREFIX_LENGTH);
+            validateTaskIndex(index);
 
-        tasks[index].markAsNotDone();
-        System.out.println(" OK, I've marked this task as not done yet:");
-        System.out.println("   " + tasks[index].toString());
+            tasks[index].markAsNotDone();
+            System.out.println(" OK, I've marked this task as not done yet:");
+            System.out.println("   " + tasks[index].toString());
+        } catch (NumberFormatException e) {
+            throw new JuliusException("Please provide a valid task number to unmark.");
+        } catch (IndexOutOfBoundsException e) {
+            throw new JuliusException("Task number out of range. You ONLY have " + taskCount + " tasks.");
+        }
     }
 
     private static int parseTaskIndex(String input, int prefixLength) {
