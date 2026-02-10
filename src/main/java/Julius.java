@@ -137,17 +137,28 @@ public class Julius {
         int fromIndex = remainder.indexOf("/from ");
         int toIndex = remainder.indexOf("/to ");
 
-        if (fromIndex == -1 || toIndex == -1 || toIndex <= fromIndex) {
+        if (fromIndex == -1 || toIndex == -1) {
             throw new JuliusException("Please use format: event <description> /from <start> /to <end>");
+        }
+        if (toIndex <= fromIndex) {
+            throw new JuliusException("The /to must come after /from in the command.");
         }
 
         String description = remainder.substring(0, fromIndex).trim();
         String from = remainder.substring(fromIndex + 6, toIndex).trim();
         String to = remainder.substring(toIndex + 4).trim();
 
-        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            throw new JuliusException("Please provide description, from and to times.");
+        if (description.isEmpty()) {
+            throw new JuliusException("The description of an event cannot be empty.");
         }
+        if (from.isEmpty()){
+            throw new JuliusException("Please provide a start time for the event.");
+        }
+        if (to.isEmpty()){
+            throw new JuliusException("Please provide an end time for the event.");
+        }
+        // I choose to be more specific here and split up the checks for clarity.
+
 
         tasks[taskCount] = new Event(description, from, to);
         taskCount++;
