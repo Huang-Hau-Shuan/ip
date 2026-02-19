@@ -6,20 +6,20 @@ import julius.task.Event;
 import julius.task.Task;
 import julius.task.Todo;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Julius {
     private static final String DIVIDER = "____________________________________________________________";
-    private static final int MAX_TASKS = 100;
     private static final String BOT_NAME = "Julius";
     private static final int TODO_PREFIX_LENGTH = 5;
     private static final int DEADLINE_PREFIX_LENGTH = 9;
     private static final int EVENT_PREFIX_LENGTH = 6;
     private static final int MARK_PREFIX_LENGTH = 5;
     private static final int UNMARK_PREFIX_LENGTH = 7;
+    private static final int DELETE_PREFIX_LENGTH = 7;
 
-    private static Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
+    private static ArrayList<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
         showWelcomeMessage();
@@ -86,6 +86,10 @@ public class Julius {
                 throw new JuliusException("Please provide a task number to unmark.");
             } else if (userInput.startsWith("unmark ")) {
                 markTaskAsNotDone(userInput);
+            } else if (userInput.equalsIgnoreCase("delete")) {
+                throw new JuliusException("Please provide a task number to delete.");
+            } else if (userInput.startsWith("delete ")) {
+                deleteTask(userInput);
             } else {
                 throw new JuliusException("Mea Culpa! I don't know what that means!");
             }
@@ -97,14 +101,14 @@ public class Julius {
     }
 
     private static void listTasks() {
-        if (taskCount == 0) {
+        if (tasks.isEmpty()) {
             System.out.println("    No tasks in your list.");
             return;
         }
 
         System.out.println(" Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println(" " + (i + 1) + "." + tasks[i].toString());
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println(" " + (i + 1) + "." + tasks.get(i).toString());
         }
     }
 
@@ -115,12 +119,11 @@ public class Julius {
             throw new JuliusException("Please provide a task description.");
         }
 
-        tasks[taskCount] = new Todo(description);
-        taskCount++;
+        tasks.add(new Todo(description));
         printTaskAddedMessage();
     }
 
-    private static void addDeadlineTask(String userInput) throws JuliusException{
+    private static void addDeadlineTask(String userInput) throws JuliusException {
         String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
         int byIndex = remainder.indexOf("/by ");
 
@@ -135,8 +138,7 @@ public class Julius {
             throw new JuliusException("Please provide both description and deadline.");
         }
 
-        tasks[taskCount] = new Deadline(description, by);
-        taskCount++;
+        tasks.add(new Deadline(description, by));
         printTaskAddedMessage();
     }
 
@@ -159,17 +161,15 @@ public class Julius {
         if (description.isEmpty()) {
             throw new JuliusException("The description of an event cannot be empty.");
         }
-        if (from.isEmpty()){
+        if (from.isEmpty()) {
             throw new JuliusException("Please provide a start time for the event.");
         }
-        if (to.isEmpty()){
+        if (to.isEmpty()) {
             throw new JuliusException("Please provide an end time for the event.");
         }
         // I choose to be more specific here and split up the checks for clarity.
 
-
-        tasks[taskCount] = new Event(description, from, to);
-        taskCount++;
+        tasks.add(new Event(description, from, to));
         printTaskAddedMessage();
     }
 
@@ -178,13 +178,13 @@ public class Julius {
             int index = parseTaskIndex(userInput, MARK_PREFIX_LENGTH);
             validateTaskIndex(index);
 
-            tasks[index].markAsDone();
+            tasks.get(index).markAsDone();
             System.out.println(" Nice! I've marked this task as done:");
-            System.out.println("   " + tasks[index].toString());
+            System.out.println("   " + tasks.get(index).toString());
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to mark.");
         } catch (IndexOutOfBoundsException e) {
-            throw new JuliusException("Task number out of range. You ONLY have " + taskCount + " tasks.");
+            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
         }
     }
 
@@ -193,13 +193,16 @@ public class Julius {
             int index = parseTaskIndex(userInput, UNMARK_PREFIX_LENGTH);
             validateTaskIndex(index);
 
-            tasks[index].markAsNotDone();
+            tasks.get(index).markAsNotDone();
             System.out.println(" OK, I've marked this task as not done yet:");
-            System.out.println("   " + tasks[index].toString());
+            System.out.println("   " + tasks.get(index).toString());
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to unmark.");
         } catch (IndexOutOfBoundsException e) {
-            throw new JuliusException("Task number out of range. You ONLY have " + taskCount + " tasks.");
+            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
+        }
+    }
+
     private static void deleteTask(String userInput) throws JuliusException {
         try {
             int index = parseTaskIndex(userInput, DELETE_PREFIX_LENGTH);
@@ -221,15 +224,15 @@ public class Julius {
     }
 
     private static void validateTaskIndex(int index) {
-        if (index < 0 || index >= taskCount) {
+        if (index < 0 || index >= tasks.size()) {
             throw new IndexOutOfBoundsException("Invalid task index.");
         }
     }
 
     private static void printTaskAddedMessage() {
         System.out.println(" Got it. I've added this task:");
-        System.out.println("   " + tasks[taskCount - 1].toString());
-        System.out.println(" Now you have " + taskCount + " tasks in the list.");
+        System.out.println("   " + tasks.get(tasks.size() - 1).toString());
+        System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
     }
 
     private static void printDivider() {
