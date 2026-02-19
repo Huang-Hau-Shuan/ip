@@ -241,6 +241,7 @@ public class Julius {
             System.out.println(" Noted. I've removed this task:");
             System.out.println("   " + deletedTask.toString());
             System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+            saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to delete.");
         } catch (IndexOutOfBoundsException e) {
