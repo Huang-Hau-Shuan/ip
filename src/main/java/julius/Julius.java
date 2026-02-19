@@ -105,7 +105,17 @@ public class Julius {
             } else if (userInput.startsWith("delete ")) {
                 deleteTask(userInput);
             } else {
-                throw new JuliusException("Mea Culpa! I don't know what that means!");
+                // add a list of valid commands in the error message for better user guidance
+
+                throw new JuliusException("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
+                        + " - list\n"
+                        + " - todo <description>\n"
+                        + " - deadline <description> /by <date>\n"
+                        + " - event <description> /from <start> /to <end>\n"
+                        + " - mark <task number>\n"
+                        + " - unmark <task number>\n"
+                        + " - delete <task number>\n"
+                        + " - anything containing 'bye' to exit");
             }
         } catch (JuliusException e) {
             System.out.println("    " + e.getMessage());
