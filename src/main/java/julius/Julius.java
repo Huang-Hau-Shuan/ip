@@ -200,6 +200,19 @@ public class Julius {
             throw new JuliusException("Please provide a valid task number to unmark.");
         } catch (IndexOutOfBoundsException e) {
             throw new JuliusException("Task number out of range. You ONLY have " + taskCount + " tasks.");
+    private static void deleteTask(String userInput) throws JuliusException {
+        try {
+            int index = parseTaskIndex(userInput, DELETE_PREFIX_LENGTH);
+            validateTaskIndex(index);
+
+            Task deletedTask = tasks.remove(index);
+            System.out.println(" Noted. I've removed this task:");
+            System.out.println("   " + deletedTask.toString());
+            System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        } catch (NumberFormatException e) {
+            throw new JuliusException("Please provide a valid task number to delete.");
+        } catch (IndexOutOfBoundsException e) {
+            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
         }
     }
 
