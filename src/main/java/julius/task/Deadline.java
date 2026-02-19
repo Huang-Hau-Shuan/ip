@@ -7,6 +7,10 @@ public class Deadline extends Task {
         super(description);
         this.by = by;
     }
+    // Getter for the 'by' field, needed for storage and display purposes
+    public String getBy() {
+        return by;
+    }
 
     @Override
     public String toString() {

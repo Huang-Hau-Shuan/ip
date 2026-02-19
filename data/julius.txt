@@ -1,0 +1,2 @@
+T | 0 | laundry
+D | 0 | EE4415 RTL Transformation | 22 Feb 2026

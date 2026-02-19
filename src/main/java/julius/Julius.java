@@ -1,12 +1,14 @@
 package julius;
 
 import julius.exception.JuliusException;
+import julius.storage.Storage;
 import julius.task.Deadline;
 import julius.task.Event;
 import julius.task.Task;
 import julius.task.Todo;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Julius {
@@ -18,14 +20,26 @@ public class Julius {
     private static final int MARK_PREFIX_LENGTH = 5;
     private static final int UNMARK_PREFIX_LENGTH = 7;
     private static final int DELETE_PREFIX_LENGTH = 7;
+    private static final String DATA_FILE_PATH = "./data/julius.txt";
 
     private static ArrayList<Task> tasks = new ArrayList<>();
+    private static Storage storage = new Storage(DATA_FILE_PATH);
 
     public static void main(String[] args) {
+        loadTasksFromDisk();
         showWelcomeMessage();
         Scanner scanner = new Scanner(System.in);
         runCommandLoop(scanner);
         showGoodbyeMessage();
+    }
+
+    private static void loadTasksFromDisk() {
+        List<Task> loaded = storage.load();
+        tasks.addAll(loaded);
+    }
+
+    private static void saveTasksToDisk() {
+        storage.save(tasks);
     }
 
     private static void showWelcomeMessage() {
@@ -121,6 +135,7 @@ public class Julius {
 
         tasks.add(new Todo(description));
         printTaskAddedMessage();
+        saveTasksToDisk();
     }
 
     private static void addDeadlineTask(String userInput) throws JuliusException {
@@ -140,6 +155,7 @@ public class Julius {
 
         tasks.add(new Deadline(description, by));
         printTaskAddedMessage();
+        saveTasksToDisk();
     }
 
     private static void addEventTask(String userInput) throws JuliusException {
@@ -171,6 +187,7 @@ public class Julius {
 
         tasks.add(new Event(description, from, to));
         printTaskAddedMessage();
+        saveTasksToDisk();
     }
 
     private static void markTaskAsDone(String userInput) throws JuliusException {
@@ -181,6 +198,7 @@ public class Julius {
             tasks.get(index).markAsDone();
             System.out.println(" Nice! I've marked this task as done:");
             System.out.println("   " + tasks.get(index).toString());
+            saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to mark.");
         } catch (IndexOutOfBoundsException e) {
@@ -196,6 +214,7 @@ public class Julius {
             tasks.get(index).markAsNotDone();
             System.out.println(" OK, I've marked this task as not done yet:");
             System.out.println("   " + tasks.get(index).toString());
+            saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to unmark.");
         } catch (IndexOutOfBoundsException e) {
