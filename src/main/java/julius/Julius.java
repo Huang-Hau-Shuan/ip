@@ -1,44 +1,52 @@
 package julius;
 
+import julius.command.Command;
 import julius.exception.JuliusException;
 import julius.parser.Parser;
 import julius.storage.Storage;
 import julius.task.TaskList;
 import julius.ui.Ui;
 
-import java.util.Scanner;
-
 public class Julius {
-    private static final Storage storage = new Storage();
-    private static final TaskList tasks = new TaskList(storage.load());
-    private static final Ui ui = new Ui();
-    private static final Parser parser = new Parser();
+    private final Storage storage;
+    private final TaskList tasks;
+    private final Ui ui;
 
-    public static void main(String[] args) {
-        ui.showWelcome();
-        Scanner scanner = new Scanner(System.in);
-        runCommandLoop(scanner);
-        ui.showGoodbye();
+    public Julius() {
+        ui = new Ui();
+        storage = new Storage();
+        tasks = new TaskList(storage.load());
     }
 
-    private static void runCommandLoop(Scanner scanner) {
-        while (true) {
-            String userInput = scanner.nextLine().trim();
+    public Julius(String filePath) {
+        ui = new Ui();
+        storage = new Storage(filePath);
+        tasks = new TaskList(storage.load());
+    }
 
-            if (parser.isExit(userInput)) {
-                break;
-            }
-
-            ui.showDivider();
+    public void run() {
+        ui.showWelcome();
+        boolean isExit = false;
+        while (!isExit) {
             try {
-                parser.parse(userInput, tasks, ui);
-                storage.save(tasks.getAll());
+                String fullCommand = ui.readCommand();
+                ui.showDivider();
+                Command c = Parser.parse(fullCommand);
+                c.execute(tasks, ui, storage);
+                isExit = c.isExit();
             } catch (JuliusException e) {
                 ui.showError(e.getMessage());
-            } catch (Exception e) {
-                ui.showError("An error occurred: " + e.getMessage());
+            } finally {
+                ui.showDivider();
             }
-            ui.showDivider();
+        }
+    }
+
+    public static void main(String[] args) {
+        if (args.length > 0) {
+            new Julius(args[0]).run();
+        } else {
+            new Julius().run();
         }
     }
 }

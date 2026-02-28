@@ -3,13 +3,26 @@ package julius.ui;
 import julius.task.Task;
 import julius.task.TaskList;
 
+import java.util.Scanner;
+
 /**
  * Deals with interactions with the user.
- * Handles all output printed to the console.
+ * Handles all input reading and output printing.
  */
 public class Ui {
     private static final String DIVIDER = "____________________________________________________________";
     private static final String BOT_NAME = "Julius";
+
+    private final Scanner scanner;
+
+    public Ui() {
+        this.scanner = new Scanner(System.in);
+    }
+
+    /** Reads and returns the next line of user input, trimmed of whitespace. */
+    public String readCommand() {
+        return scanner.nextLine().trim();
+    }
 
     /** Prints the opening divider, greeting, and ASCII logo. */
     public void showWelcome() {
