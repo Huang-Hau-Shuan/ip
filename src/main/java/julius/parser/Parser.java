@@ -1,19 +1,23 @@
 package julius.parser;
 
+import julius.command.AddDeadlineCommand;
+import julius.command.AddEventCommand;
+import julius.command.AddTodoCommand;
+import julius.command.Command;
+import julius.command.DeleteCommand;
+import julius.command.ExitCommand;
+import julius.command.InvalidCommand;
+import julius.command.ListCommand;
+import julius.command.MarkCommand;
+import julius.command.UnmarkCommand;
 import julius.exception.JuliusException;
-import julius.task.Task;
-import julius.task.TaskList;
-import julius.ui.Ui;
 
 /**
- * Makes sense of raw user input and executes the corresponding action.
+ * Makes sense of raw user input and returns the matching Command object.
  * Owns all string-parsing logic (prefix lengths, flag tokens, if-else dispatch).
  */
 public class Parser {
 
-    // ----------------------------------------------------------------
-    // Prefix lengths for trimming the command keyword from user input
-    // ----------------------------------------------------------------
     private static final int TODO_PREFIX_LENGTH = 5;       // "todo "
     private static final int DEADLINE_PREFIX_LENGTH = 9;   // "deadline "
     private static final int EVENT_PREFIX_LENGTH = 6;      // "event "
@@ -22,56 +26,58 @@ public class Parser {
     private static final int DELETE_PREFIX_LENGTH = 7;     // "delete "
 
     /**
-     * Parses {@code userInput} and immediately executes the matching action
-     * against the provided {@code TaskList} and {@code Ui}.
+     * Parses {@code userInput} and returns the corresponding {@link Command}.
+     * Never returns null — unrecognised input returns an {@link InvalidCommand}.
      *
      * @param userInput the raw, trimmed line entered by the user
-     * @param tasks     the live task list to mutate
-     * @param ui        used to print responses
-     * @throws JuliusException for known user errors (bad format, empty description, etc.)
+     * @return a ready-to-execute Command
+     * @throws JuliusException if the input is structurally invalid (e.g. missing /by)
      */
-    public void parse(String userInput, TaskList tasks, Ui ui) throws JuliusException {
-        if (userInput.equalsIgnoreCase("list")) {
-            handleList(tasks, ui);
+    public static Command parse(String userInput) throws JuliusException {
+        if (userInput.equalsIgnoreCase("bye")) {
+            return new ExitCommand();
+
+        } else if (userInput.equalsIgnoreCase("list")) {
+            return new ListCommand();
 
         } else if (userInput.equalsIgnoreCase("todo")) {
-            throw new JuliusException("The description of a todo cannot be empty.");
+            return new InvalidCommand("The description of a todo cannot be empty.");
 
         } else if (userInput.startsWith("todo ")) {
-            handleTodo(userInput, tasks, ui);
+            return parseTodo(userInput);
 
         } else if (userInput.equalsIgnoreCase("deadline")) {
-            throw new JuliusException("The description of a deadline cannot be empty.");
+            return new InvalidCommand("The description of a deadline cannot be empty.");
 
         } else if (userInput.startsWith("deadline ")) {
-            handleDeadline(userInput, tasks, ui);
+            return parseDeadline(userInput);
 
         } else if (userInput.equalsIgnoreCase("event")) {
-            throw new JuliusException("The description of an event cannot be empty.");
+            return new InvalidCommand("The description of an event cannot be empty.");
 
         } else if (userInput.startsWith("event ")) {
-            handleEvent(userInput, tasks, ui);
+            return parseEvent(userInput);
 
         } else if (userInput.equalsIgnoreCase("mark")) {
-            throw new JuliusException("Please provide a task number to mark.");
+            return new InvalidCommand("Please provide a task number to mark.");
 
         } else if (userInput.startsWith("mark ")) {
-            handleMark(userInput, tasks, ui);
+            return parseMark(userInput);
 
         } else if (userInput.equalsIgnoreCase("unmark")) {
-            throw new JuliusException("Please provide a task number to unmark.");
+            return new InvalidCommand("Please provide a task number to unmark.");
 
         } else if (userInput.startsWith("unmark ")) {
-            handleUnmark(userInput, tasks, ui);
+            return parseUnmark(userInput);
 
         } else if (userInput.equalsIgnoreCase("delete")) {
-            throw new JuliusException("Please provide a task number to delete.");
+            return new InvalidCommand("Please provide a task number to delete.");
 
         } else if (userInput.startsWith("delete ")) {
-            handleDelete(userInput, tasks, ui);
+            return parseDelete(userInput);
 
         } else {
-            throw new JuliusException("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
+            return new InvalidCommand("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
                     + " - list\n"
                     + " - todo <description>\n"
                     + " - deadline <description> /by <date>\n"
@@ -79,34 +85,20 @@ public class Parser {
                     + " - mark <task number>\n"
                     + " - unmark <task number>\n"
                     + " - delete <task number>\n"
-                    + " - anything containing 'bye' to exit");
+                    + " - bye to exit");
         }
     }
 
-    /**
-     * Returns true when the input is a recognised exit command.
-     * Kept in Parser so Julius.java has no string-matching logic at all.
-     */
-    public boolean isExit(String userInput) {
-        String processed = userInput.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
-        return processed.contains("bye");
-    }
-
     // ----------------------------------------------------------------
-    // Private command handlers
+    // Private parse helpers — each returns a fully constructed Command
     // ----------------------------------------------------------------
 
-    private void handleList(TaskList tasks, Ui ui) {
-        ui.showTaskList(tasks);
-    }
-
-    private void handleTodo(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseTodo(String userInput) {
         String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
-        Task added = tasks.addTodo(description);
-        ui.showTaskAdded(added, tasks.size());
+        return new AddTodoCommand(description);
     }
 
-    private void handleDeadline(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseDeadline(String userInput) throws JuliusException {
         String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
         int byIndex = remainder.indexOf("/by ");
         if (byIndex == -1) {
@@ -114,11 +106,10 @@ public class Parser {
         }
         String description = remainder.substring(0, byIndex).trim();
         String by = remainder.substring(byIndex + 4).trim();
-        Task added = tasks.addDeadline(description, by);
-        ui.showTaskAdded(added, tasks.size());
+        return new AddDeadlineCommand(description, by);
     }
 
-    private void handleEvent(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseEvent(String userInput) throws JuliusException {
         String remainder = userInput.substring(EVENT_PREFIX_LENGTH).trim();
         int fromIndex = remainder.indexOf("/from ");
         int toIndex = remainder.indexOf("/to ");
@@ -131,46 +122,38 @@ public class Parser {
         String description = remainder.substring(0, fromIndex).trim();
         String from = remainder.substring(fromIndex + 6, toIndex).trim();
         String to = remainder.substring(toIndex + 4).trim();
-        Task added = tasks.addEvent(description, from, to);
-        ui.showTaskAdded(added, tasks.size());
+        return new AddEventCommand(description, from, to);
     }
 
-    private void handleMark(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseMark(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, MARK_PREFIX_LENGTH);
-            Task marked = tasks.markDone(index);
-            ui.showTaskMarkedDone(marked);
+            return new MarkCommand(index);
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to mark.");
         }
     }
 
-    private void handleUnmark(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseUnmark(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, UNMARK_PREFIX_LENGTH);
-            Task marked = tasks.markNotDone(index);
-            ui.showTaskMarkedNotDone(marked);
+            return new UnmarkCommand(index);
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to unmark.");
         }
     }
 
-    private void handleDelete(String userInput, TaskList tasks, Ui ui) throws JuliusException {
+    private static Command parseDelete(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, DELETE_PREFIX_LENGTH);
-            Task deleted = tasks.delete(index);
-            ui.showTaskDeleted(deleted, tasks.size());
+            return new DeleteCommand(index);
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to delete.");
         }
     }
 
-    // ----------------------------------------------------------------
-    // Private parse helpers
-    // ----------------------------------------------------------------
-
     /** Converts the numeric suffix of a command string to a 0-based task index. */
-    private int parseIndex(String input, int prefixLength) {
+    private static int parseIndex(String input, int prefixLength) {
         return Integer.parseInt(input.substring(prefixLength).trim()) - 1;
     }
 }
