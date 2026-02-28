@@ -1,2 +1,2 @@
-T | 0 | laundry
 E | 0 | CG2028 Finals | 2 March 9am | 2 March 1130am
+T | 0 | Study for CG2028 Finals
