@@ -2,14 +2,10 @@ package julius;
 
 import julius.exception.JuliusException;
 import julius.storage.Storage;
-import julius.task.Deadline;
-import julius.task.Event;
 import julius.task.Task;
-import julius.task.Todo;
+import julius.task.TaskList;
 import julius.ui.Ui;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Julius {
@@ -21,7 +17,7 @@ public class Julius {
     private static final int DELETE_PREFIX_LENGTH = 7;
     private static final String DATA_FILE_PATH = "./data/julius.txt";
 
-    private static ArrayList<Task> tasks = new ArrayList<>();
+    private static TaskList tasks = new TaskList();
     private static Storage storage = new Storage(DATA_FILE_PATH);
     private static Ui ui = new Ui();
 
@@ -34,12 +30,11 @@ public class Julius {
     }
 
     private static void loadTasksFromDisk() {
-        List<Task> loaded = storage.load();
-        tasks.addAll(loaded);
+        tasks = new TaskList(storage.load());
     }
 
     private static void saveTasksToDisk() {
-        storage.save(tasks);
+        storage.save(tasks.getAll());
     }
 
     private static void runCommandLoop(Scanner scanner) {
@@ -91,7 +86,6 @@ public class Julius {
                 deleteTask(userInput);
             } else {
                 // add a list of valid commands in the error message for better user guidance
-
                 throw new JuliusException("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
                         + " - list\n"
                         + " - todo <description>\n"
@@ -114,7 +108,6 @@ public class Julius {
             System.out.println("    No tasks in your list.");
             return;
         }
-
         System.out.println(" Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
             System.out.println(" " + (i + 1) + "." + tasks.get(i).toString());
@@ -123,33 +116,21 @@ public class Julius {
 
     private static void addTodoTask(String userInput) throws JuliusException {
         String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
-
-        if (description.isEmpty()) {
-            throw new JuliusException("Please provide a task description.");
-        }
-
-        tasks.add(new Todo(description));
-        printTaskAddedMessage();
+        Task added = tasks.addTodo(description);
+        printTaskAddedMessage(added);
         saveTasksToDisk();
     }
 
     private static void addDeadlineTask(String userInput) throws JuliusException {
         String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
         int byIndex = remainder.indexOf("/by ");
-
         if (byIndex == -1) {
             throw new JuliusException("Please use format: deadline <description> /by <date>");
         }
-
         String description = remainder.substring(0, byIndex).trim();
         String by = remainder.substring(byIndex + 4).trim();
-
-        if (description.isEmpty() || by.isEmpty()) {
-            throw new JuliusException("Please provide both description and deadline.");
-        }
-
-        tasks.add(new Deadline(description, by));
-        printTaskAddedMessage();
+        Task added = tasks.addDeadline(description, by);
+        printTaskAddedMessage(added);
         saveTasksToDisk();
     }
 
@@ -157,80 +138,54 @@ public class Julius {
         String remainder = userInput.substring(EVENT_PREFIX_LENGTH).trim();
         int fromIndex = remainder.indexOf("/from ");
         int toIndex = remainder.indexOf("/to ");
-
         if (fromIndex == -1 || toIndex == -1) {
             throw new JuliusException("Please use format: event <description> /from <start> /to <end>");
         }
         if (toIndex <= fromIndex) {
             throw new JuliusException("The /to must come after /from in the command.");
         }
-
         String description = remainder.substring(0, fromIndex).trim();
         String from = remainder.substring(fromIndex + 6, toIndex).trim();
         String to = remainder.substring(toIndex + 4).trim();
-
-        if (description.isEmpty()) {
-            throw new JuliusException("The description of an event cannot be empty.");
-        }
-        if (from.isEmpty()) {
-            throw new JuliusException("Please provide a start time for the event.");
-        }
-        if (to.isEmpty()) {
-            throw new JuliusException("Please provide an end time for the event.");
-        }
-        // I choose to be more specific here and split up the checks for clarity.
-
-        tasks.add(new Event(description, from, to));
-        printTaskAddedMessage();
+        Task added = tasks.addEvent(description, from, to);
+        printTaskAddedMessage(added);
         saveTasksToDisk();
     }
 
     private static void markTaskAsDone(String userInput) throws JuliusException {
         try {
             int index = parseTaskIndex(userInput, MARK_PREFIX_LENGTH);
-            validateTaskIndex(index);
-
-            tasks.get(index).markAsDone();
+            Task marked = tasks.markDone(index);
             System.out.println(" Nice! I've marked this task as done:");
-            System.out.println("   " + tasks.get(index).toString());
+            System.out.println("   " + marked.toString());
             saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to mark.");
-        } catch (IndexOutOfBoundsException e) {
-            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
         }
     }
 
     private static void markTaskAsNotDone(String userInput) throws JuliusException {
         try {
             int index = parseTaskIndex(userInput, UNMARK_PREFIX_LENGTH);
-            validateTaskIndex(index);
-
-            tasks.get(index).markAsNotDone();
+            Task marked = tasks.markNotDone(index);
             System.out.println(" OK, I've marked this task as not done yet:");
-            System.out.println("   " + tasks.get(index).toString());
+            System.out.println("   " + marked.toString());
             saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to unmark.");
-        } catch (IndexOutOfBoundsException e) {
-            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
         }
     }
 
     private static void deleteTask(String userInput) throws JuliusException {
         try {
             int index = parseTaskIndex(userInput, DELETE_PREFIX_LENGTH);
-            validateTaskIndex(index);
-
-            Task deletedTask = tasks.remove(index);
+            Task deleted = tasks.delete(index);
             System.out.println(" Noted. I've removed this task:");
-            System.out.println("   " + deletedTask.toString());
+            System.out.println("   " + deleted.toString());
             System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
             saveTasksToDisk();
         } catch (NumberFormatException e) {
             throw new JuliusException("Please provide a valid task number to delete.");
-        } catch (IndexOutOfBoundsException e) {
-            throw new JuliusException("Task number out of range. You ONLY have " + tasks.size() + " tasks.");
         }
     }
 
@@ -238,15 +193,9 @@ public class Julius {
         return Integer.parseInt(input.substring(prefixLength).trim()) - 1;
     }
 
-    private static void validateTaskIndex(int index) {
-        if (index < 0 || index >= tasks.size()) {
-            throw new IndexOutOfBoundsException("Invalid task index.");
-        }
-    }
-
-    private static void printTaskAddedMessage() {
+    private static void printTaskAddedMessage(Task task) {
         System.out.println(" Got it. I've added this task:");
-        System.out.println("   " + tasks.get(tasks.size() - 1).toString());
+        System.out.println("   " + task.toString());
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
     }
 }
