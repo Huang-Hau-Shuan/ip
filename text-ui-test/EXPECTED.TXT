@@ -48,7 +48,15 @@ ____________________________________________________________
     The description of an event cannot be empty.
 ____________________________________________________________
 ____________________________________________________________
-    Mea Culpa! I don't know what that means!
+    Mea Culpa! I don't know what that means! Here are the commands I understand:
+ - list
+ - todo <description>
+ - deadline <description> /by <date>
+ - event <description> /from <start> /to <end>
+ - mark <task number>
+ - unmark <task number>
+ - delete <task number>
+ - bye to exit
 ____________________________________________________________
 ____________________________________________________________
     Task number out of range. You ONLY have 3 tasks.
@@ -60,5 +68,14 @@ ____________________________________________________________
  3.[E][ ] project meeting (from: Mon 2pm to: 4pm)
 ____________________________________________________________
 ____________________________________________________________
- Bye. Hope to see you again soon!
+    Mea Culpa! I don't know what that means! Here are the commands I understand:
+ - list
+ - todo <description>
+ - deadline <description> /by <date>
+ - event <description> /from <start> /to <end>
+ - mark <task number>
+ - unmark <task number>
+ - delete <task number>
+ - bye to exit
+____________________________________________________________
 ____________________________________________________________
