@@ -15,23 +15,18 @@ public class Julius {
     private static final int MARK_PREFIX_LENGTH = 5;
     private static final int UNMARK_PREFIX_LENGTH = 7;
     private static final int DELETE_PREFIX_LENGTH = 7;
-    private static final String DATA_FILE_PATH = "./data/julius.txt";
 
-    private static TaskList tasks = new TaskList();
-    private static Storage storage = new Storage(DATA_FILE_PATH);
-    private static Ui ui = new Ui();
+    private static final Storage storage = new Storage();
+    private static final TaskList tasks = new TaskList(storage.load());
+    private static final Ui ui = new Ui();
 
     public static void main(String[] args) {
-        loadTasksFromDisk();
         ui.showWelcome();
         Scanner scanner = new Scanner(System.in);
         runCommandLoop(scanner);
         ui.showGoodbye();
     }
 
-    private static void loadTasksFromDisk() {
-        tasks = new TaskList(storage.load());
-    }
 
     private static void saveTasksToDisk() {
         storage.save(tasks.getAll());

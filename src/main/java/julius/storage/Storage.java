@@ -8,7 +8,6 @@ import julius.task.Todo;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -21,28 +20,37 @@ import java.util.Scanner;
  *   E | 0 | description | from | to
  */
 public class Storage {
-    private final String filePath;
+    private static final String DEFAULT_FILE_PATH = "./data/julius.txt";
 
+    private final File file;
+
+    /** Creates a Storage using the default data file path. */
+    public Storage() {
+        this(DEFAULT_FILE_PATH);
+    }
+
+    /** Creates a Storage using a custom file path. */
     public Storage(String filePath) {
-        this.filePath = filePath;
+        this.file = new File(filePath);
+        ensureDirectoryExists();
+    }
+
+    /** Creates the parent directory of the data file if it does not yet exist. */
+    private void ensureDirectoryExists() {
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
     }
 
     /**
      * Loads tasks from the data file.
-     * Creates the file (and parent directories) if they don't exist.
      * Skips corrupted lines with a warning.
      *
      * @return List of tasks loaded from disk.
      */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
-        File file = new File(filePath);
-
-        // Create parent directories if they don't exist
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
 
         if (!file.exists()) {
             // Fresh start — no file yet, return empty list
@@ -73,18 +81,8 @@ public class Storage {
 
     /**
      * Saves all tasks to the data file, overwriting previous content.
-     *
-     * @param tasks Array of tasks to save.
-     * @param taskCount Number of valid tasks in the array.
      */
     public void save(ArrayList<Task> tasks) {
-        File file = new File(filePath);
-
-        // Ensure parent directories exist
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
 
         try (FileWriter writer = new FileWriter(file)) {
             for (Task task : tasks) {
