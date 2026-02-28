@@ -6,14 +6,13 @@ import julius.task.Deadline;
 import julius.task.Event;
 import julius.task.Task;
 import julius.task.Todo;
+import julius.ui.Ui;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Julius {
-    private static final String DIVIDER = "____________________________________________________________";
-    private static final String BOT_NAME = "Julius";
     private static final int TODO_PREFIX_LENGTH = 5;
     private static final int DEADLINE_PREFIX_LENGTH = 9;
     private static final int EVENT_PREFIX_LENGTH = 6;
@@ -24,13 +23,14 @@ public class Julius {
 
     private static ArrayList<Task> tasks = new ArrayList<>();
     private static Storage storage = new Storage(DATA_FILE_PATH);
+    private static Ui ui = new Ui();
 
     public static void main(String[] args) {
         loadTasksFromDisk();
-        showWelcomeMessage();
+        ui.showWelcome();
         Scanner scanner = new Scanner(System.in);
         runCommandLoop(scanner);
-        showGoodbyeMessage();
+        ui.showGoodbye();
     }
 
     private static void loadTasksFromDisk() {
@@ -42,21 +42,6 @@ public class Julius {
         storage.save(tasks);
     }
 
-    private static void showWelcomeMessage() {
-        String logo = "      _ _    _ _      _____ _    _  _____\n"
-                + "     | | |  | | |    |_   _| |  | |/ ____|\n"
-                + "     | | |  | | |      | | | |  | | (___\n"
-                + " _   | | |  | | |      | | | |  | |\\___ \\\n"
-                + "| |__| | |__| | |____ _| |_| |__| |____) |\n"
-                + " \\____/ \\____/|______|_____|\\____/|_____/\n";
-
-        System.out.println("Hello from\n" + logo);
-        printDivider();
-        System.out.println(" Hello! I'm " + BOT_NAME);
-        System.out.println(" What can I do for you?");
-        printDivider();
-    }
-
     private static void runCommandLoop(Scanner scanner) {
         while (true) {
             String userInput = scanner.nextLine().trim();
@@ -65,9 +50,9 @@ public class Julius {
                 break;
             }
 
-            printDivider();
+            ui.showDivider();
             executeCommand(userInput);
-            printDivider();
+            ui.showDivider();
         }
     }
 
@@ -263,15 +248,5 @@ public class Julius {
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + tasks.get(tasks.size() - 1).toString());
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
-    }
-
-    private static void printDivider() {
-        System.out.println(DIVIDER);
-    }
-
-    private static void showGoodbyeMessage() {
-        printDivider();
-        System.out.println(" Bye. Hope to see you again soon!");
-        printDivider();
     }
 }
