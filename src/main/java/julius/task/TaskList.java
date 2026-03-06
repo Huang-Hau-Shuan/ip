@@ -68,9 +68,13 @@ public class TaskList {
         if (description.isEmpty() || by.isEmpty()) {
             throw new JuliusException("Please provide both description and deadline.");
         }
-        Deadline deadline = new Deadline(description, by);
-        tasks.add(deadline);
-        return deadline;
+        try {
+            Deadline deadline = new Deadline(description, by);
+            tasks.add(deadline);
+            return deadline;
+        } catch (IllegalArgumentException e) {
+            throw new JuliusException(e.getMessage());
+        }
     }
 
     /**
