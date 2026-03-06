@@ -54,6 +54,7 @@ ____________________________________________________________
  - deadline <description> /by <date>  (date: yyyy-MM-dd HHmm)
  - deadline on <date>                 (date: yyyy-MM-dd)
  - event <description> /from <start> /to <end>
+ - find <keyword>
  - mark <task number>
  - unmark <task number>
  - delete <task number>
@@ -69,12 +70,18 @@ ____________________________________________________________
  3.[E][ ] project meeting (from: Mon 2pm to: 4pm)
 ____________________________________________________________
 ____________________________________________________________
+ Here are the matching tasks in your list:
+ 1.[T][ ] read book
+ 2.[D][ ] return book (by: Dec 02 2019, 6:00PM)
+____________________________________________________________
+____________________________________________________________
     Mea Culpa! I don't know what that means! Here are the commands I understand:
  - list
  - todo <description>
  - deadline <description> /by <date>  (date: yyyy-MM-dd HHmm)
  - deadline on <date>                 (date: yyyy-MM-dd)
  - event <description> /from <start> /to <end>
+ - find <keyword>
  - mark <task number>
  - unmark <task number>
  - delete <task number>

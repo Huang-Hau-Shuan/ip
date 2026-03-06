@@ -7,6 +7,7 @@ import julius.command.Command;
 import julius.command.DeadlineOnCommand;
 import julius.command.DeleteCommand;
 import julius.command.ExitCommand;
+import julius.command.FindCommand;
 import julius.command.InvalidCommand;
 import julius.command.ListCommand;
 import julius.command.MarkCommand;
@@ -83,6 +84,12 @@ public class Parser {
         } else if (userInput.startsWith("delete ")) {
             return parseDelete(userInput);
 
+        } else if (userInput.equalsIgnoreCase("find")) {
+            return new InvalidCommand("Please provide a keyword to search for.");
+
+        } else if (userInput.startsWith("find ")) {
+            return new FindCommand(userInput.substring(5).trim());
+
         } else {
             return new InvalidCommand("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
                     + " - list\n"
@@ -90,6 +97,7 @@ public class Parser {
                     + " - deadline <description> /by <date>  (date: yyyy-MM-dd HHmm)\n"
                     + " - deadline on <date>                 (date: yyyy-MM-dd)\n"
                     + " - event <description> /from <start> /to <end>\n"
+                    + " - find <keyword>\n"
                     + " - mark <task number>\n"
                     + " - unmark <task number>\n"
                     + " - delete <task number>\n"

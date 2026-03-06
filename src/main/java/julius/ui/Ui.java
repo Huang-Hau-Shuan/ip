@@ -98,6 +98,18 @@ public class Ui {
         System.out.println("   " + task.toString());
     }
 
+    /** Prints all tasks whose description matches the search keyword. */
+    public void showMatchingTasks(List<Task> matched) {
+        if (matched.isEmpty()) {
+            System.out.println(" No matching tasks found.");
+            return;
+        }
+        System.out.println(" Here are the matching tasks in your list:");
+        for (int i = 0; i < matched.size(); i++) {
+            System.out.println(" " + (i + 1) + "." + matched.get(i).toString());
+        }
+    }
+
     /** Prints all deadlines occurring on the given date. */
     public void showTasksOnDate(List<Task> matched, LocalDate date) {
         String formatted = date.format(DateTimeFormatter.ofPattern("MMM dd yyyy"));

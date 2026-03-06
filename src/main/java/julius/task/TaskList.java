@@ -132,6 +132,20 @@ public class TaskList {
     }
 
     /**
+     * Returns all tasks whose description contains {@code keyword} (case-insensitive).
+     */
+    public List<Task> findByKeyword(String keyword) {
+        List<Task> result = new ArrayList<>();
+        String lowerKeyword = keyword.toLowerCase();
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase().contains(lowerKeyword)) {
+                result.add(task);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Returns all Deadline tasks whose due date matches {@code date}.
      * (Events remain free-text for now; only typed Deadlines are filtered.)
      */
