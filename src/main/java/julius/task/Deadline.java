@@ -1,5 +1,6 @@
 package julius.task;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -37,6 +38,11 @@ public class Deadline extends Task {
      */
     public String getBy() {
         return by.format(INPUT_FORMAT);
+    }
+
+    /** Returns just the date portion, for date-based filtering. */
+    public LocalDate getDate() {
+        return by.toLocalDate();
     }
 
     @Override

@@ -3,6 +3,9 @@ package julius.ui;
 import julius.task.Task;
 import julius.task.TaskList;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -93,5 +96,18 @@ public class Ui {
     public void showTaskMarkedNotDone(Task task) {
         System.out.println(" OK, I've marked this task as not done yet:");
         System.out.println("   " + task.toString());
+    }
+
+    /** Prints all deadlines occurring on the given date. */
+    public void showTasksOnDate(List<Task> matched, LocalDate date) {
+        String formatted = date.format(DateTimeFormatter.ofPattern("MMM dd yyyy"));
+        if (matched.isEmpty()) {
+            System.out.println(" No deadlines found on " + formatted + ".");
+            return;
+        }
+        System.out.println(" Here are the deadlines on " + formatted + ":");
+        for (int i = 0; i < matched.size(); i++) {
+            System.out.println(" " + (i + 1) + "." + matched.get(i).toString());
+        }
     }
 }

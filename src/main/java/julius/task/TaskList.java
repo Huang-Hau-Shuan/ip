@@ -2,6 +2,7 @@ package julius.task;
 
 import julius.exception.JuliusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,6 +129,23 @@ public class TaskList {
         validateIndex(index);
         tasks.get(index).markAsNotDone();
         return tasks.get(index);
+    }
+
+    /**
+     * Returns all Deadline tasks whose due date matches {@code date}.
+     * (Events remain free-text for now; only typed Deadlines are filtered.)
+     */
+    public List<Task> getTasksOnDate(LocalDate date) {
+        List<Task> result = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task instanceof Deadline) {
+                Deadline d = (Deadline) task;
+                if (d.getDate().equals(date)) {
+                    result.add(d);
+                }
+            }
+        }
+        return result;
     }
 
     // Private helpers

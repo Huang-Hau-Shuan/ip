@@ -4,6 +4,7 @@ import julius.command.AddDeadlineCommand;
 import julius.command.AddEventCommand;
 import julius.command.AddTodoCommand;
 import julius.command.Command;
+import julius.command.DeadlineOnCommand;
 import julius.command.DeleteCommand;
 import julius.command.ExitCommand;
 import julius.command.InvalidCommand;
@@ -11,6 +12,9 @@ import julius.command.ListCommand;
 import julius.command.MarkCommand;
 import julius.command.UnmarkCommand;
 import julius.exception.JuliusException;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 /**
  * Makes sense of raw user input and returns the matching Command object.
@@ -49,6 +53,9 @@ public class Parser {
         } else if (userInput.equalsIgnoreCase("deadline")) {
             return new InvalidCommand("The description of a deadline cannot be empty.");
 
+        } else if (userInput.startsWith("deadline on ")) {
+            return parseDeadlineOn(userInput);
+
         } else if (userInput.startsWith("deadline ")) {
             return parseDeadline(userInput);
 
@@ -80,7 +87,8 @@ public class Parser {
             return new InvalidCommand("Mea Culpa! I don't know what that means! Here are the commands I understand:\n"
                     + " - list\n"
                     + " - todo <description>\n"
-                    + " - deadline <description> /by <date>\n"
+                    + " - deadline <description> /by <date>  (date: yyyy-MM-dd HHmm)\n"
+                    + " - deadline on <date>                 (date: yyyy-MM-dd)\n"
                     + " - event <description> /from <start> /to <end>\n"
                     + " - mark <task number>\n"
                     + " - unmark <task number>\n"
@@ -96,6 +104,18 @@ public class Parser {
     private static Command parseTodo(String userInput) {
         String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
         return new AddTodoCommand(description);
+    }
+
+    /** Parses {@code deadline on yyyy-MM-dd} and returns a {@link DeadlineOnCommand}. */
+    private static Command parseDeadlineOn(String userInput) throws JuliusException {
+        // "deadline on " is 12 characters
+        String dateStr = userInput.substring(12).trim();
+        try {
+            LocalDate date = LocalDate.parse(dateStr);
+            return new DeadlineOnCommand(date);
+        } catch (DateTimeParseException e) {
+            throw new JuliusException("Invalid date format. Please use: deadline on yyyy-MM-dd (e.g. 2019-12-02)");
+        }
     }
 
     private static Command parseDeadline(String userInput) throws JuliusException {
