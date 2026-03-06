@@ -5,6 +5,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * Represents a task that must be completed by a specific date and time.
+ * Displayed with the {@code [D]} prefix.
+ * <p>
+ * The due date/time is accepted and stored internally in {@code yyyy-MM-dd HHmm} format
+ * (e.g. {@code 2019-12-02 1800}) and displayed to the user in {@code MMM dd yyyy, h:mma}
+ * format (e.g. {@code Dec 02 2019, 6:00PM}).
+ * </p>
+ */
 public class Deadline extends Task {
     /** Input / storage format: yyyy-MM-dd HHmm (e.g. 2019-12-02 1800) */
     private static final DateTimeFormatter INPUT_FORMAT =
@@ -16,11 +25,11 @@ public class Deadline extends Task {
     protected LocalDateTime by;
 
     /**
-     * Creates a Deadline whose due date is parsed from {@code byString}.
+     * Creates a Deadline task whose due date/time is parsed from {@code byString}.
      *
-     * @param description task description
-     * @param byString    date/time string in {@code yyyy-MM-dd HHmm} format
-     * @throws IllegalArgumentException if {@code byString} cannot be parsed
+     * @param description human-readable description of the task
+     * @param byString    due date/time string in {@code yyyy-MM-dd HHmm} format
+     * @throws IllegalArgumentException if {@code byString} does not match the expected format
      */
     public Deadline(String description, String byString) {
         super(description);
@@ -33,18 +42,31 @@ public class Deadline extends Task {
     }
 
     /**
-     * Returns the due date/time in the stable storage format ({@code yyyy-MM-dd HHmm}).
-     * Used by Storage when writing to disk.
+     * Returns the due date/time formatted for file storage ({@code yyyy-MM-dd HHmm}).
+     * This value is stable and suitable for round-tripping through the data file.
+     *
+     * @return due date/time string in storage format
      */
     public String getBy() {
         return by.format(INPUT_FORMAT);
     }
 
-    /** Returns just the date portion, for date-based filtering. */
+    /**
+     * Returns only the date portion of the due date/time.
+     * Used for date-based filtering (e.g. the {@code deadline on} command).
+     *
+     * @return the {@link LocalDate} on which this task is due
+     */
     public LocalDate getDate() {
         return by.toLocalDate();
     }
 
+    /**
+     * Returns a formatted string representation of this Deadline task,
+     * including the due date/time in human-readable form.
+     *
+     * @return task string prefixed with {@code [D]}
+     */
     @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: " + by.format(DISPLAY_FORMAT) + ")";
