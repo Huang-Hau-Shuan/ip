@@ -13,47 +13,56 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Handles loading and saving of tasks to a file on disk.
- * File format per line:
+ * Handles loading and saving of tasks to a plain-text file on disk.
+ * <p>
+ * Each line in the file encodes one task in pipe-delimited format:
+ * </p>
+ * <pre>
  *   T | 0 | description
- *   D | 1 | description | by
+ *   D | 1 | description | yyyy-MM-dd HHmm
  *   E | 0 | description | from | to
+ * </pre>
+ * <p>
+ * Corrupted lines are skipped with a console warning rather than aborting the load.
+ * </p>
  */
 public class Storage {
     private static final String DEFAULT_FILE_PATH = "./data/julius.txt";
 
     private final File file;
 
-    /** Creates a Storage using the default data file path. */
+    /**
+     * Creates a Storage instance using the default data file path
+     * ({@code ./data/julius.txt}).
+     */
     public Storage() {
         this(DEFAULT_FILE_PATH);
     }
 
-    /** Creates a Storage using a custom file path. */
+    /**
+     * Creates a Storage instance that reads from and writes to the given file path.
+     * The parent directory is created automatically if it does not exist.
+     *
+     * @param filePath path to the data file
+     */
     public Storage(String filePath) {
         this.file = new File(filePath);
         ensureDirectoryExists();
     }
 
-    /** Creates the parent directory of the data file if it does not yet exist. */
-    private void ensureDirectoryExists() {
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-    }
-
     /**
      * Loads tasks from the data file.
-     * Skips corrupted lines with a warning.
+     * <p>
+     * Returns an empty list if the file does not yet exist.
+     * Lines that cannot be parsed are skipped with a warning printed to standard output.
+     * </p>
      *
-     * @return List of tasks loaded from disk.
+     * @return list of tasks loaded from disk; never {@code null}
      */
     public List<Task> load() {
         List<Task> tasks = new ArrayList<>();
 
         if (!file.exists()) {
-            // Fresh start — no file yet, return empty list
             return tasks;
         }
 
@@ -80,10 +89,12 @@ public class Storage {
     }
 
     /**
-     * Saves all tasks to the data file, overwriting previous content.
+     * Saves all tasks in the given list to the data file, overwriting any previous content.
+     * A console warning is printed if the file cannot be written.
+     *
+     * @param tasks the current list of tasks to persist
      */
     public void save(ArrayList<Task> tasks) {
-
         try (FileWriter writer = new FileWriter(file)) {
             for (Task task : tasks) {
                 writer.write(encodeTask(task) + System.lineSeparator());
@@ -94,7 +105,21 @@ public class Storage {
     }
 
     /**
-     * Converts a task to its file storage string format.
+     * Creates the parent directory of the data file if it does not already exist.
+     */
+    private void ensureDirectoryExists() {
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+    }
+
+    /**
+     * Converts a {@link Task} to its pipe-delimited file storage string.
+     *
+     * @param task the task to encode; must be a {@link Todo}, {@link Deadline}, or {@link Event}
+     * @return the encoded line ready to be written to the data file
+     * @throws IllegalArgumentException if the task type is not recognised
      */
     private String encodeTask(Task task) {
         if (task instanceof Todo) {
@@ -111,8 +136,11 @@ public class Storage {
     }
 
     /**
-     * Parses a single line from the data file into a Task.
-     * Throws IllegalArgumentException if the line format is invalid.
+     * Parses a single pipe-delimited line from the data file into a {@link Task}.
+     *
+     * @param line the raw line read from disk
+     * @return the reconstructed task
+     * @throws IllegalArgumentException if the line format is invalid or the task type is unknown
      */
     private Task parseTask(String line) {
         String[] parts = line.split(" \\| ");

@@ -18,8 +18,16 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 /**
- * Makes sense of raw user input and returns the matching Command object.
- * Owns all string-parsing logic (prefix lengths, flag tokens, if-else dispatch).
+ * Translates raw user input strings into executable {@link Command} objects.
+ * <p>
+ * All string-parsing logic — prefix lengths, flag tokens ({@code /by}, {@code /from},
+ * {@code /to}), and the if-else dispatch table — is contained here, keeping it out of
+ * the main application loop and the command classes themselves.
+ * </p>
+ * <p>
+ * {@link #parse(String)} never returns {@code null}; unrecognised input produces an
+ * {@link InvalidCommand} that surfaces a helpful error message to the user.
+ * </p>
  */
 public class Parser {
 
@@ -32,11 +40,14 @@ public class Parser {
 
     /**
      * Parses {@code userInput} and returns the corresponding {@link Command}.
-     * Never returns null — unrecognised input returns an {@link InvalidCommand}.
+     * <p>
+     * The dispatch order matters: more specific prefixes (e.g. {@code deadline on})
+     * are checked before their general counterparts (e.g. {@code deadline}).
+     * </p>
      *
      * @param userInput the raw, trimmed line entered by the user
-     * @return a ready-to-execute Command
-     * @throws JuliusException if the input is structurally invalid (e.g. missing /by)
+     * @return a ready-to-execute {@link Command}; never {@code null}
+     * @throws JuliusException if the input is structurally invalid (e.g. missing {@code /by})
      */
     public static Command parse(String userInput) throws JuliusException {
         if (userInput.equalsIgnoreCase("bye")) {
@@ -109,12 +120,24 @@ public class Parser {
     // Private parse helpers — each returns a fully constructed Command
     // ----------------------------------------------------------------
 
+    /**
+     * Parses a {@code todo <description>} command.
+     *
+     * @param userInput the full input string
+     * @return an {@link AddTodoCommand} with the extracted description
+     */
     private static Command parseTodo(String userInput) {
         String description = userInput.substring(TODO_PREFIX_LENGTH).trim();
         return new AddTodoCommand(description);
     }
 
-    /** Parses {@code deadline on yyyy-MM-dd} and returns a {@link DeadlineOnCommand}. */
+    /**
+     * Parses a {@code deadline on <yyyy-MM-dd>} command.
+     *
+     * @param userInput the full input string
+     * @return a {@link DeadlineOnCommand} for the parsed date
+     * @throws JuliusException if the date string does not match {@code yyyy-MM-dd}
+     */
     private static Command parseDeadlineOn(String userInput) throws JuliusException {
         // "deadline on " is 12 characters
         String dateStr = userInput.substring(12).trim();
@@ -126,6 +149,13 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a {@code deadline <description> /by <yyyy-MM-dd HHmm>} command.
+     *
+     * @param userInput the full input string
+     * @return an {@link AddDeadlineCommand} with the extracted description and due date
+     * @throws JuliusException if the {@code /by} flag is missing
+     */
     private static Command parseDeadline(String userInput) throws JuliusException {
         String remainder = userInput.substring(DEADLINE_PREFIX_LENGTH).trim();
         int byIndex = remainder.indexOf("/by ");
@@ -137,6 +167,14 @@ public class Parser {
         return new AddDeadlineCommand(description, by);
     }
 
+    /**
+     * Parses an {@code event <description> /from <start> /to <end>} command.
+     *
+     * @param userInput the full input string
+     * @return an {@link AddEventCommand} with the extracted description and time window
+     * @throws JuliusException if either the {@code /from} or {@code /to} flag is missing,
+     *                         or if {@code /to} appears before {@code /from}
+     */
     private static Command parseEvent(String userInput) throws JuliusException {
         String remainder = userInput.substring(EVENT_PREFIX_LENGTH).trim();
         int fromIndex = remainder.indexOf("/from ");
@@ -153,6 +191,13 @@ public class Parser {
         return new AddEventCommand(description, from, to);
     }
 
+    /**
+     * Parses a {@code mark <task number>} command.
+     *
+     * @param userInput the full input string
+     * @return a {@link MarkCommand} with the 0-based task index
+     * @throws JuliusException if the task number is not a valid integer
+     */
     private static Command parseMark(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, MARK_PREFIX_LENGTH);
@@ -162,6 +207,13 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses an {@code unmark <task number>} command.
+     *
+     * @param userInput the full input string
+     * @return an {@link UnmarkCommand} with the 0-based task index
+     * @throws JuliusException if the task number is not a valid integer
+     */
     private static Command parseUnmark(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, UNMARK_PREFIX_LENGTH);
@@ -171,6 +223,13 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a {@code delete <task number>} command.
+     *
+     * @param userInput the full input string
+     * @return a {@link DeleteCommand} with the 0-based task index
+     * @throws JuliusException if the task number is not a valid integer
+     */
     private static Command parseDelete(String userInput) throws JuliusException {
         try {
             int index = parseIndex(userInput, DELETE_PREFIX_LENGTH);
@@ -180,7 +239,15 @@ public class Parser {
         }
     }
 
-    /** Converts the numeric suffix of a command string to a 0-based task index. */
+    /**
+     * Extracts the numeric suffix of a command string and converts it to a 0-based index.
+     * For example, {@code "mark 3"} with prefix length 5 yields {@code 2}.
+     *
+     * @param input        the full command string
+     * @param prefixLength the number of characters occupied by the command verb and trailing space
+     * @return the 0-based task index
+     * @throws NumberFormatException if the suffix is not a valid integer
+     */
     private static int parseIndex(String input, int prefixLength) {
         return Integer.parseInt(input.substring(prefixLength).trim()) - 1;
     }
